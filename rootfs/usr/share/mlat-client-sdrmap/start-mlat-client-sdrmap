@@ -70,7 +70,7 @@ ARGS+=("--input-type" "$INPUT_TYPE")
 ARGS+=("--input-connect" "$INPUT_HOSTPORT")
 ARGS+=("--server" "$SERVER_HOSTPORT")
 ARGS+=("--results" "beast,listen,30105")
-ARGS+=("--results" "beast,connect,localhost,30104")
+ARGS+=("--results" "beast,connect,localhost:30104")
 ARGS+=("--stats-json" "/run/mlat-client-stats.json")
 
 if ! chk_disabled "$MLAT_PRIVACY"; then
