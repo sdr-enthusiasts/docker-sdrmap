@@ -7,5 +7,5 @@ if ! chk_enabled "$MLAT"; then
     stop_service
 fi
 
-echo "Starting stunnel"
-exec "${s6wrap[@]}" stunnel /etc/stunnel/mlat.conf
+echo "Starting sltunnel"
+exec "${s6wrap[@]}" /opt/slclient 127.0.0.1:3333 mlat.feed.sdrmap.org:3334 sdrmap.org

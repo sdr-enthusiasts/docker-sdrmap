@@ -1,7 +1,8 @@
-# Note - do not remove the ##telegraf## tags from this file - they are used to build a tag that includes the telegraf binary
-##telegraf##FROM telegraf:1.26 AS telegraf
-
-##telegraf##RUN touch /tmp/emptyfile
+FROM rust:1.85.1 AS builder
+WORKDIR /tmp/
+RUN git clone https://github.com/fredclausen/sltunnel.git
+WORKDIR /tmp/sltunnel
+RUN cargo build --release
 
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:wreadsb
 
@@ -18,7 +19,6 @@ RUN set -x && \
     KEPT_PACKAGES=() && \
     KEPT_PACKAGES+=(gzip) && \
     KEPT_PACKAGES+=(curl) && \
-    KEPT_PACKAGES+=(stunnel4) && \
     # install packages
     apt-get update && \
     apt-get install -y --no-install-suggests --no-install-recommends \
@@ -31,3 +31,4 @@ RUN set -x && \
     rm -rf /src/* /tmp/* /var/lib/apt/lists/* /var/cache/*
 
 COPY rootfs/ /
+COPY --from=builder /tmp/sltunnel/target/release/client /opt/slclient
