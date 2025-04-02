@@ -40,7 +40,8 @@ You will want to send mlat results to ultrafeeder using this environment variabl
 ### MLAT Privacy
 
 > [!WARNING]
-> By default your station will not shown on the SDR Map website. If you want, you can set `MLAT_PRIVACY` to `false` and the position will be shown. The station position is fuzzed, slightly, due to rounding of your position's latitude/longitude, but it's still possible your station can be uncomfortably close to your actual position.
+> The station position is currently rounded to 2 decimals for latitude/longitude which means it snaps to a 1km grid.
+> If you would rather not show that station position, set `MLAT_PRIVACY` to `true`
 
 ## Runtime Environment Variables
 
@@ -58,7 +59,7 @@ There are a series of available environment variables:
 | `TZ`                 | Optional. Your local timezone                                                            | GMT            |
 | `MLAT`               | Optional. Enable MLAT (true/false)                                                       | false          |
 | `MLAT_RESULTS`       | Optional. Add --results output to mlat-client (example: beast,connect,ultrafeeder:31004) | false          |
-| `MLAT_PRIVACY`       | Optional. Set to false to show your station on the SDR Map website                       | true           |
+| `MLAT_PRIVACY`       | Optional. Set to true to hide your station on the SDR Map website                        | false          |
 
 ## Ports
 

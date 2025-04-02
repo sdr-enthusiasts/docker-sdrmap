@@ -73,10 +73,7 @@ ARGS+=("--results" "beast,listen,30105")
 ARGS+=("--results" "beast,connect,localhost:30104")
 ARGS+=("--stats-json" "/run/mlat-client-stats.json")
 
-if ! chk_disabled "$MLAT_PRIVACY"; then
-    # seems --privacy is ignored by this aggregator, the station location will be rounded to 2
-    # decimals for latitude and longitude regardless of this setting
-    # let's keep the logic to default to --privacy anyhow in case the aggregator changes this
+if chk_enabled "$MLAT_PRIVACY"; then
     ARGS+=("--privacy")
 fi
 
