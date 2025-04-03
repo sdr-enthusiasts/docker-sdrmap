@@ -99,7 +99,14 @@ dns_lookup () {
 	return 0
 }
 
-while sleep 1; do
+if ! (( ADSB_INTERVAL >= 1 )); then
+    ADSB_INTERVAL=1
+fi
+if ! (( SYSINFO_INTERVAL >= 30 )); then
+    SYSINFO_INTERVAL=30
+fi
+
+while sleep "$ADSB_INTERVAL"; do
 	CURL_EXTRA=""
 	# If DNS_CACHE is set, use the builtin cache (and correspondingly the additional curl arg
 	if [ $DNS_CACHE -ne 0 ]; then
@@ -114,7 +121,7 @@ while sleep 1; do
 		fi
 	fi
 
-	if chk_enabled "$SEND_SYSINFO" && (( $(date +"%s") - sysinfolastrun >= ${SYSINFOINTERVAL} )); then
+	if chk_enabled "$SEND_SYSINFO" && (( $(date +"%s") - sysinfolastrun >= ${SYSINFO_INTERVAL} )); then
 		sysinfolastrun=$(date +"%s")
 		echo "{\
 			\"cpu\":{\
@@ -145,7 +152,7 @@ while sleep 1; do
 			},\
 			\"feeder\":{\
 				\"version\":\"$version\",\
-				\"interval\":\"$SYSINFOINTERVAL\" \
+				\"interval\":\"$SYSINFO_INTERVAL\" \
 			}\
 		}" | gzip -c | curl --fail-with-body -sSL \
 										-u "$SMUSERNAME":"$SMPASSWORD" \
@@ -165,8 +172,6 @@ while sleep 1; do
 		touch /run/feed_ok
 	else
 		rm -f /run/feed_ok
-		# sleep a bit if this fails, no need to hammer the server if this doesn't work
-		sleep 4
 	fi
 
 	# if [ "$radiosonde" = "true" ] && [ $(($(date +"%s") - $radiosondelastrun)) -ge "$radiosondeinterval" ];
