@@ -6,8 +6,8 @@ source /scripts/common
 
 ADSBPATH="/run/readsb/aircraft.json"
 
-# version='4.0'
-# sysinfolastrun=0
+version='4.0-sdre-docker'
+sysinfolastrun=0
 # radiosondelastrun=0
 
 # wait for readsb to be ready
@@ -22,7 +22,9 @@ if [[ -z $SMUSERNAME ]] || [[ -z $SMPASSWORD ]] || [[ $SMUSERNAME == "youruserna
 fi
 
 REMOTE_URL="https://adsb.feed.sdrmap.org/index.php"
-REMOTE_HOST=$( echo $REMOTE_URL | awk -F'/' '{print $3}' )
+REMOTE_HOST="$(awk -F'/' '{print $3}' <<< "$REMOTE_URL")"
+
+REMOTE_SYS_URL="https://sys.feed.sdrmap.org/index.php"
 
 #####################
 #  DNS cache setup  #
@@ -98,44 +100,6 @@ dns_lookup () {
 }
 
 while sleep 1; do
-	# if [ "$sysinfo" = "true" ] && [ $(($(date +"%s") - $sysinfolastrun)) -ge "$sysinfointerval" ];
-	# 	then
-	# 	sysinfolastrun=$(date +"%s")
-	# echo "{\
-	# 	\"cpu\":{\
-	# 		\"model\":\"$(cat /proc/cpuinfo |grep 'model name'|tail -n 1|cut -d ':' -f 2)\",\
-	# 		\"cores\":\"$(cat /proc/cpuinfo |grep -c -e '^processor')\",\
-	# 		\"load\":\"$(cat /proc/loadavg |cut -d ' ' -f 1)\",\
-	# 		\"temp\":\"$(($(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null |sort -n|tail -n 1)/1000))\",\
-	# 		\"throttled\":\"$(vcgencmd get_throttled 2>/dev/null |cut -d '=' -f 2 )\"\
-	# 	},\
-	# 	\"memory\":{\
-	# 		\"total\":\"$(cat /proc/meminfo |grep 'MemTotal:'|cut -d ':' -f 2|awk '{$1=$1};1')\",\
-	# 		\"free\":\"$(cat /proc/meminfo |grep 'MemFree:'|cut -d ':' -f 2|awk '{$1=$1};1')\",\
-	# 		\"available\":\"$(cat /proc/meminfo |grep 'MemAvailable:'|cut -d ':' -f 2|awk '{$1=$1};1')\"\
-	# 	},\
-	# 	\"uptime\":\"$(cat /proc/uptime |cut -d ' ' -f 1)\",\
-	# 	\"os\":{\
-	# 		\"kernel\":\"$(uname -r)\"\
-	# 	},\
-	# 	\"packages\":{\
-	# 		\"c2isrepo\":\"$(cat /etc/apt/sources.list.d/*|grep -c 'https://repo.chaos-consulting.de')\",\
-	# 		\"sdrmaprepo\":\"$(cat /etc/apt/sources.list.d/*|grep -c 'https://repo.sdrmap.org')\",\
-	# 		\"mlat-client-c2is\":\"$(dpkg -s mlat-client-c2is 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
-	# 		\"mlat-client-sdrmap\":\"$(dpkg -s mlat-client-sdrmap 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
-	# 		\"stunnel4\":\"$(dpkg -s stunnel4 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
-	# 		\"dump1090-mutability\":\"$(dpkg -s dump1090-mutability 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
-	# 		\"dump1090-fa\":\"$(dpkg -s dump1090-fa 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
-	# 		\"ais-catcher\":\"$(dpkg -s ais-catcher 2>&1 |grep 'Version:'|cut -d ' ' -f 2)\"\
-	# 	},\
-	# 	\"feeder\":{\
-	# 		\"version\":\"$version\",\
-	# 		\"interval\":\"$sysinfointerval\"
-	# 	}\
-	# }"| gzip -c |curl -s -u $username:$password -X POST -H "Content-type: application/json" -H "Content-encoding: gzip" --data-binary @- https://sys.feed.sdrmap.org/index.php
-	# fi;
-	#
-
 	CURL_EXTRA=""
 	# If DNS_CACHE is set, use the builtin cache (and correspondingly the additional curl arg
 	if [ $DNS_CACHE -ne 0 ]; then
@@ -150,6 +114,49 @@ while sleep 1; do
 		fi
 	fi
 
+	if chk_enabled "$SEND_SYSINFO" && (( $(date +"%s") - sysinfolastrun >= ${sysinfointerval:-300} )); then
+		sysinfolastrun=$(date +"%s")
+		echo "{\
+			\"cpu\":{\
+				\"model\":\"$(grep 'model name' /proc/cpuinfo |tail -n 1|cut -d ':' -f 2)\",\
+				\"cores\":\"$(grep -c -e '^processor' /proc/cpuinfo)\",\
+				\"load\":\"$(cut -d ' ' -f 1 < /proc/loadavg)\",\
+				\"temp\":\"$(( $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null |sort -n|tail -n 1) / 1000 ))\",\
+				\"throttled\":\"$(vcgencmd get_throttled 2>/dev/null |cut -d '=' -f 2 )\"\
+			},\
+			\"memory\":{\
+				\"total\":\"$(grep 'MemTotal:' /proc/meminfo | cut -d ':' -f 2 | awk '{$1=$1};1')\",\
+				\"free\":\"$(grep 'MemFree:' /proc/meminfo | cut -d ':' -f 2 | awk '{$1=$1};1')\",\
+				\"available\":\"$(grep 'MemAvailable:' /proc/meminfo| cut -d ':' -f 2 | awk '{$1=$1};1')\"\
+			},\
+			\"uptime\":\"$(cut -d ' ' -f 1 < /proc/uptime)\",\
+			\"os\":{\
+				\"kernel\":\"$(uname -r)\"\
+			},\
+			\"packages\":{\
+				\"c2isrepo\":\"$(cat /etc/apt/sources.list.d/* | grep -c 'https://repo.chaos-consulting.de')\",\
+				\"sdrmaprepo\":\"$(cat /etc/apt/sources.list.d/* | grep -c 'https://repo.sdrmap.org')\",\
+				\"mlat-client-c2is\":\"$(dpkg -s mlat-client-c2is 2>&1 | grep 'Version:'|cut -d ' ' -f 2)\",\
+				\"mlat-client-sdrmap\":\"$(grep -o -m 1 'MlatClient==[0-9.]\+' "$(which mlat-client)"| sed 's/MlatClient==//')\",\
+				\"stunnel4\":\"$(stunnel 2>&1 | grep -o -m 1 'stunnel [0-9.]\+'| sed 's/stunnel //')\",\
+				\"dump1090-mutability\":\"$(dpkg -s dump1090-mutability 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
+				\"dump1090-fa\":\"$(dpkg -s dump1090-fa 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
+				\"ais-catcher\":\"$(dpkg -s ais-catcher 2>&1 |grep 'Version:'|cut -d ' ' -f 2)\"\
+			},\
+			\"feeder\":{\
+				\"version\":\"$version\",\
+				\"interval\":\"$sysinfointerval\"
+			}\
+		}" | gzip -c | curl --fail-with-body -sSL \
+										-u "$SMUSERNAME:$SMPASSWORD" \
+										-X POST \
+										--max-time 10 \
+										-H "Content-type: application/json" \
+										-H "Content-encoding: gzip" \
+										--data-binary @- \
+										"$REMOTE_SYS_URL"
+	fi;
+	#
 
 	if gzip -c $ADSBPATH | curl --fail-with-body -sS -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
 		$CURL_EXTRA --max-time 10 -H "Content-type: application/json" -H "Content-encoding: gzip" \
