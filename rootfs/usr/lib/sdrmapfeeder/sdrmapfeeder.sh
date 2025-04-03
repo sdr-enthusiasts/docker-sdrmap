@@ -114,7 +114,7 @@ while sleep 1; do
 		fi
 	fi
 
-	if chk_enabled "$SEND_SYSINFO" && (( $(date +"%s") - sysinfolastrun >= ${sysinfointerval:-300} )); then
+	if chk_enabled "$SEND_SYSINFO" && (( $(date +"%s") - sysinfolastrun >= ${SYSINFOINTERVAL} )); then
 		sysinfolastrun=$(date +"%s")
 		echo "{\
 			\"cpu\":{\
@@ -145,10 +145,10 @@ while sleep 1; do
 			},\
 			\"feeder\":{\
 				\"version\":\"$version\",\
-				\"interval\":\"$sysinfointerval\" \
+				\"interval\":\"$SYSINFOINTERVAL\" \
 			}\
 		}" | gzip -c | curl --fail-with-body -sSL \
-										-u "$SMUSERNAME:$SMPASSWORD" \
+										-u "$SMUSERNAME":"$SMPASSWORD" \
 										-X POST \
 										--max-time 10 \
 										-H "Content-type: application/json" \

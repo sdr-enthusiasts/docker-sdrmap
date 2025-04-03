@@ -25,6 +25,7 @@ FROM ghcr.io/sdr-enthusiasts/docker-baseimage:wreadsb
 ENV BEASTPORT=30005 \
     SMUSERNAME=yourusername \
     SMPASSWORD=yourpassword \
+    SYSINFOINTERVAL=60 \
     MLAT=false
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
