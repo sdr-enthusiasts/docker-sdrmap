@@ -145,7 +145,7 @@ while sleep 1; do
 			},\
 			\"feeder\":{\
 				\"version\":\"$version\",\
-				\"interval\":\"$sysinfointerval\"
+				\"interval\":\"$sysinfointerval\" \
 			}\
 		}" | gzip -c | curl --fail-with-body -sSL \
 										-u "$SMUSERNAME:$SMPASSWORD" \
