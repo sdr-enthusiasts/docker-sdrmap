@@ -121,7 +121,7 @@ while sleep "$ADSB_INTERVAL"; do
 		fi
 	fi
 
-	if chk_enabled "$SEND_SYSINFO" && (( $(date +"%s") - sysinfolastrun >= ${SYSINFO_INTERVAL} )); then
+	if chk_enabled "$SEND_SYSINFO" && (( $(date +"%s") - sysinfolastrun >= SYSINFO_INTERVAL )); then
 		sysinfolastrun=$(date +"%s")
 		echo "{\
 			\"cpu\":{\
