@@ -140,7 +140,7 @@ while sleep 1; do
 				\"mlat-client-sdrmap\":\"$(grep -o -m 1 'MlatClient==[0-9.]\+' "$(which mlat-client)"| sed 's/MlatClient==//')\",\
 				\"stunnel4\":\"$(stunnel 2>&1 | grep -o -m 1 'stunnel [0-9.]\+'| sed 's/stunnel //')\",\
 				\"dump1090-mutability\":\"$(dpkg -s dump1090-mutability 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
-				\"dump1090-fa\":\"$(dpkg -s dump1090-fa 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
+				\"dump1090-fa\":\"$(readsb --version 2>&1 | sed 's/readsb version: \([0-9.]\+\).*/wreadsb-\1/')\",\
 				\"ais-catcher\":\"$(dpkg -s ais-catcher 2>&1 |grep 'Version:'|cut -d ' ' -f 2)\"\
 			},\
 			\"feeder\":{\
