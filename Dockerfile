@@ -27,7 +27,7 @@ ENV BEASTPORT=30005 \
     SMPASSWORD=yourpassword \
     ADSB_INTERVAL=1 \
     SYSINFO_INTERVAL=60 \
-    MLAT=false
+    MLAT=true
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 

@@ -6,7 +6,7 @@ Docker container running [SDR Map's](http://sdrmap.org) feeder scripts. Designed
 
 ## Obtaining credentials to feed
 
-Please visit [feeding](https://github.com/sdrmap/docs/wiki/2.1-Feeding) for instructions on how to obtain credentials to feed. Once you have credentials, you can proceed with setting up the container.
+Please visit [feeding](https://github.com/sdrmap/docs/wiki/2.1-Feeding) for instructions on how to obtain credentials to feed. Once you have credentials (a username and password), you can proceed with setting up the container.
 
 ## Up-and-Running with Docker Compose
 
@@ -17,19 +17,26 @@ services:
     container_name: sdrmap
     restart: always
     environment:
-      - TZ=Australia/Perth
+      - TZ=America/New_York
       - BEASTHOST=ultrafeeder
       - LAT=-33.33333
       - LON=111.11111
+      - ALT=99
       - SMUSERNAME=yourusername
       - SMPASSWORD=yourpassword
+      - SEND_SYSINFO=true
+      - MLAT_PRIVACY=false
     tmpfs:
-      - /run:exec
+      - /tmp
+      - /run:exec,size=64M
+      - /var/log
 ```
 
 ## MLAT
 
-If you want to enable MLAT, you need to set the `MLAT` environment variable to `true`. You also need to set the `ALT` environment variable to the altitude of your antenna in meters. For example, if your antenna is 10 meters above sea level, you would set `ALT=10`. Both `MLAT` and `ALT` need to be set for MLAT to work.
+MLAT is enabled by default. If you want to disable MLAT, you need to set the `MLAT` environment variable to `false`.
+
+For MLAT to work, make sure to include the `ALT` environment variable with the altitude of your antenna in meters. For example, if your antenna is 10 meters above sea level, you would set `ALT=10`. If your `ALT` parameter is not set, MLAT will not work.
 
 You will want to send mlat results to ultrafeeder using this environment variable:
 
@@ -37,11 +44,19 @@ You will want to send mlat results to ultrafeeder using this environment variabl
 - MLAT_RESULTS=beast,connect,ultrafeeder:31004
 ```
 
+The container also provides MLAT results on port 30105. Alternatively, you could pull these results from the SDRMap container. For Ultrafeeder, this would mean adding a line to the `ULTRAFEEDER_CONFIG` parameter like this:
+
+```yaml
+- ULTRAFEEDER_CONFIG=
+    ...
+    mlathub,sdrmap,30105,beast_in;
+```
+
 ### MLAT Privacy
 
 > [!WARNING]
-> The station position is currently rounded to 2 decimals for latitude/longitude which means it snaps to a 1km grid.
-> If you would rather not show that station position, set `MLAT_PRIVACY` to `true`
+> When MLAT is enabled, you station position (rounded to 2 decimals for lat/lon) is shown on the SDRMap website, which means it will be accurate within about 1 km.
+> If you would rather not show your station position at all, set `MLAT_PRIVACY` to `true`
 
 ## Runtime Environment Variables
 
@@ -51,15 +66,16 @@ There are a series of available environment variables:
 | -------------------- | ---------------------------------------------------------------------------------------- | -------------- |
 | `BEASTHOST`          | Required. IP/Hostname of a Mode-S/BEAST provider (dump1090/readsb)                       |                |
 | `BEASTPORT`          | Optional. TCP port number of Mode-S/BEAST provider (dump1090/readsy)                     | 30005          |
-| `SMUSERNAME`         | Required. SDR Map                                                                        | `yourusername` |
-| `SMPASSWORD`         | Required. SDR Map Password                                                               | `yourpassword` |
+| `SMUSERNAME`         | Required. The `yourusername` username provided by SDRMap                                                                        |  |
+| `SMPASSWORD`         | Required. The `yourpassword` password provided by SDRMap Password                                                               |  |
 | `LAT`                | Required. Latitude of the antenna                                                        |                |
 | `LON`                | Required. Longitude of the antenna                                                       |                |
 | `ALT`                | For MLAT set the altitude in **_meters_**. No trailing `m` or other values necessary.    | Unset          |
 | `TZ`                 | Optional. Your local timezone                                                            | GMT            |
 | `MLAT`               | Optional. Enable MLAT (true/false)                                                       | false          |
 | `MLAT_RESULTS`       | Optional. Add --results output to mlat-client (example: beast,connect,ultrafeeder:31004) | false          |
-| `MLAT_PRIVACY`       | Optional. Set to true to hide your station on the SDR Map website                        | false          |
+| `MLAT_PRIVACY`       | Optional. Set to true to hide your station on the SDRMap website                        | false          |
+| `SEND_SYSINFO`       | Optional. Set to true to share some system information (CPU, speed, memory use, readsb/mlat-client versions, etc.) with SDRMap. This information may be shown on the SDRMap webpage. | false |
 
 ## Ports
 
@@ -71,6 +87,6 @@ No ports need to be mapped into this container.
 
 ## Getting Help
 
-You can [log an issue](https://github.com/sdr-enthusiasts/docker-opensky-network/issues) on the project's GitHub.
+You can [log an issue](https://github.com/sdr-enthusiasts/docker-sdrmap/issues) on the project's GitHub.
 
-I also have a [Discord channel](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse.
+We also have a [Discord server](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse.

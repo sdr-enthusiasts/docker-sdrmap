@@ -9,13 +9,13 @@
 source /scripts/common
 
 if ! chk_enabled "$MLAT"; then
-  echo "MLAT is disabled, not starting mlat-client-sdrmap" >&2
+  "${s6wrap[@]}" echo "MLAT is disabled, not starting mlat-client-sdrmap"
   sleep infinity
 fi
 
 # get the username from $SMUSERNAME. If SMUSERNAME is unset OR yourusername is the value, set USERNAME to blank
 
-if [ -z "$SMUSERNAME" ] || [ "$SMUSERNAME" = "yourusername" ]; then
+if [[ -z "$SMUSERNAME" ]] || [[ "$SMUSERNAME" = "yourusername" ]]; then
   USERNAME=""
 else
   USERNAME="$SMUSERNAME"
@@ -23,7 +23,7 @@ fi
 
 # get the password from $SMPASSWORD. If SMPASSWORD is unset OR yourpassword is the value, set PASSWORD to blank
 
-if [ -z "$SMPASSWORD" ] || [ "$SMPASSWORD" = "yourpassword" ]; then
+if [[ -z "$SMPASSWORD" ]] || [[ "$SMPASSWORD" = "yourpassword" ]]; then
   PASSWORD=""
 else
   PASSWORD="$SMPASSWORD"
@@ -31,7 +31,7 @@ fi
 
 # if either PASSWORD or USERNAME is blank, set SERVER_USER to blank. Otherwise, set SERVER_USER to USERNAME:PASSWORD
 
-if [ -z "$PASSWORD" ] || [ -z "$USERNAME" ]; then
+if [[ -z "$PASSWORD" ]] || [[ -z "$USERNAME" ]]; then
   SERVER_USER=""
 else
   SERVER_USER="$USERNAME:$PASSWORD"
@@ -53,13 +53,13 @@ SERVER_HOSTPORT="127.0.0.1:3333"
 
 # sanitize missing settings
 badconfig=""
-[ -z "$SERVER_USER" ] && badconfig="$badconfig SERVER_USER"
-[ -z "$LAT" ] && badconfig="$badconfig LAT"
-[ -z "$LON" ] && badconfig="$badconfig LON"
-[ -z "$ALT" ] && badconfig="$badconfig ALT"
-[ -z "$INPUT_TYPE" ] && INPUT_TYPE=dump1090
-[ -z "$INPUT_HOSTPORT" ] && badconfig="$badconfig INPUT_HOSTPORT"
-[ -z "$SERVER_HOSTPORT" ] && badconfig="$badconfig SERVER_HOSTPORT"
+if [[ -z "$SERVER_USER" ]]; then badconfig+=" SERVER_USER"; fi
+if [[ -z "$LAT" ]]; then badconfig+=" LAT"; fi
+if [[ -z "$LON" ]]; then badconfig+=" LON"; fi
+if [[ -z "$ALT" ]]; then badconfig+=" ALT"; fi
+if [[ -z "$INPUT_TYPE" ]]; then INPUT_TYPE=dump1090; fi
+if [[ -z "$INPUT_HOSTPORT" ]]; then badconfig+=" INPUT_HOSTPORT"; fi
+if [[ -z "$SERVER_HOSTPORT" ]]; then badconfig+=" SERVER_HOSTPORT"; fi
 
 ARGS=()
 ARGS+=("--user" "$SERVER_USER")
@@ -81,15 +81,15 @@ if [[ -n "$MLAT_RESULTS" ]]; then
     ARGS+=("--results" "$MLAT_RESULTS")
 fi
 
-if [ -n "$badconfig" ]; then
-	echo "Not starting mlat-client-sdrmap, missing configuration options ($badconfig)" >&2
+if [[ -n "$badconfig" ]]; then
+	"${s6wrap[@]}" echo "Not starting mlat-client-sdrmap, missing configuration options ($badconfig)"
 	sleep infinity
 fi
 
 if [[ "$SERVER_USER" != *:* ]]; then
-	echo "Your credentials seem to be wrong." >&2
+	"${s6wrap[@]}" echo "Your credentials seem to be wrong."
 	sleep infinity
 fi
 
-echo "Starting mlat-client-sdrmap with ${ARGS[*]}"
+"${s6wrap[@]}" echo "Starting mlat-client-sdrmap with ${ARGS[*]}"
 exec "${s6wrap[@]}" /usr/bin/mlat-client "${ARGS[@]}"

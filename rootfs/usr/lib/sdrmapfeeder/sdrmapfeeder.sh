@@ -58,7 +58,7 @@ dns_lookup () {
 	local NOW=$( date +%s )
 
 	# You need to pass in a hostname :)
-	if [ "x$HOST" = "x" ]; then
+	if [[ "x$HOST" = "x" ]]; then
 		echo "ERROR: dns_lookup called without a hostname" >&2
 		return 10
 	fi
@@ -70,8 +70,8 @@ dns_lookup () {
 	fi
 
 	# If the host is cached, and the TTL hasn't expired, return the cached data.
-	if [ ${DNS_LOOKUP[$HOST]} ]; then
-		if [ ${DNS_EXPIRE[$HOST]} -ge $NOW ]; then
+	if [[ ${DNS_LOOKUP[$HOST]} ]]; then
+		if [[ ${DNS_EXPIRE[$HOST]} -ge $NOW ]]; then
 			return 0
 		fi
 	fi
@@ -82,7 +82,7 @@ dns_lookup () {
 	HOST_IP=$( host -v -W $DNS_WAIT -t a "$HOST" | perl -ne 'if (/^Trying "(.*)"/){$h=$1; next;} if (/\.\s+(\d+)\s+IN\s+A\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {$i=$2; last}; END {printf("%s", $i);}' )
 	RV=$?
 	# If this is empty, something failed.  Sleep some and try again...
-	if [ $RV -ne 0 ] || [ "x$HOST_IP" == "x" ]; then
+	if [[ $RV -ne 0 ]] || [[ "x$HOST_IP" == "x" ]]; then
 		if ping -c1 "$HOST" &>/dev/null && ! host -v -W $DNS_WAIT -t a "$HOST" &>/dev/null; then
 			echo "host not working but ping is, disabling DNS caching!"
 			DNS_CACHE=0
@@ -109,10 +109,10 @@ fi
 while sleep "$ADSB_INTERVAL"; do
 	CURL_EXTRA=""
 	# If DNS_CACHE is set, use the builtin cache (and correspondingly the additional curl arg
-	if [ $DNS_CACHE -ne 0 ]; then
+	if [[ $DNS_CACHE -ne 0 ]]; then
 		dns_lookup $REMOTE_HOST
 		RV=$?
-		if [ $RV -ne 0 ]; then
+		if [[ $RV -ne 0 ]]; then
 			# Some sort of error...  We'll fall back to normal curl usage, but sleep a little.
 			echo "DNS Error for ${REMOTE_HOST}, fallback ..."
 		else
@@ -162,7 +162,7 @@ while sleep "$ADSB_INTERVAL"; do
 										-H "Content-encoding: gzip" \
 										--data-binary @- \
 										"$REMOTE_SYS_URL"
-	fi;
+	fi
 	#
 
 	if gzip -c $ADSBPATH | curl --fail-with-body -sS -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
@@ -174,10 +174,10 @@ while sleep "$ADSB_INTERVAL"; do
 		rm -f /run/feed_ok
 	fi
 
-	# if [ "$radiosonde" = "true" ] && [ $(($(date +"%s") - $radiosondelastrun)) -ge "$radiosondeinterval" ];
+	# if [[ "$radiosonde" = "true" ]] && [[ $(($(date +"%s") - $radiosondelastrun)) -ge "$radiosondeinterval" ]];
 	# 	then
 	# 	radiosondelastrun=$(date +"%s")
-	# 	if [ ! -d "$radiosondepath" ]; then
+	# 	if [[ ! -d "$radiosondepath" ]]; then
 	# 		echo "The log directory '$radiosondepath' doesn't exist."
 	# 		exit 1
 	# 	fi;
