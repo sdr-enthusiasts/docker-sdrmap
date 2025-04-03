@@ -143,7 +143,7 @@ while sleep "$ADSB_INTERVAL"; do
 			\"packages\":{\
 				\"c2isrepo\":\"$(cat /etc/apt/sources.list.d/* | grep -c 'https://repo.chaos-consulting.de')\",\
 				\"sdrmaprepo\":\"$(cat /etc/apt/sources.list.d/* | grep -c 'https://repo.sdrmap.org')\",\
-				\"mlat-client-c2is\":\"$(dpkg -s mlat-client-c2is 2>&1 | grep 'Version:'|cut -d ' ' -f 2)\",\
+				\"mlat-client-c2is\":\"$(grep -o -m 1 'MlatClient==[0-9.]\+' "$(which mlat-client)"| sed 's/MlatClient==//')\",\
 				\"mlat-client-sdrmap\":\"$(grep -o -m 1 'MlatClient==[0-9.]\+' "$(which mlat-client)"| sed 's/MlatClient==//')\",\
 				\"stunnel4\":\"$(stunnel 2>&1 | grep -o -m 1 'stunnel [0-9.]\+'| sed 's/stunnel //')\",\
 				\"dump1090-mutability\":\"$(dpkg -s dump1090-mutability 2>&1|grep 'Version:'|cut -d ' ' -f 2)\",\
