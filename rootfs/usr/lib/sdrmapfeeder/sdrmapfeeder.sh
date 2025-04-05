@@ -1,5 +1,5 @@
 #!/command/with-contenv bash
-# shellcheck shell=bash disable=SC1091,SC2076,SC2268,SC2155,SC2086
+# shellcheck shell=bash disable=SC1091,SC2154,SC2155
 export LANG=C.UTF-8
 
 source /scripts/common
@@ -8,7 +8,9 @@ ADSBPATH="/run/readsb/aircraft.json"
 
 version='4.0-sdre-docker'
 sysinfolastrun=0
-# radiosondelastrun=0
+radiosondelastrun=0
+
+radiosondepath="/opt/radiosonde"
 
 # wait for readsb to be ready
 while ! [[ -f "$ADSBPATH" ]]; do
@@ -16,15 +18,15 @@ while ! [[ -f "$ADSBPATH" ]]; do
 done
 
 
-if [[ -z $SMUSERNAME ]] || [[ -z $SMPASSWORD ]] || [[ $SMUSERNAME == "yourusername" ]] || [[ $SMPASSWORD == "yourpassword" ]]; then
-	echo "Please edit your credentials."
+if [[ -z "$SMUSERNAME" ]] || [[ -z "$SMPASSWORD" ]] || [[ "$SMUSERNAME" == "yourusername" ]] || [[ "$SMPASSWORD" == "yourpassword" ]]; then
+	"${s6wrap[@]}" echo "Please edit your credentials."
 	sleep infinity
 fi
 
 REMOTE_URL="https://adsb.feed.sdrmap.org/index.php"
 REMOTE_HOST="$(awk -F'/' '{print $3}' <<< "$REMOTE_URL")"
-
 REMOTE_SYS_URL="https://sys.feed.sdrmap.org/index.php"
+REMOTE_SONDE_URL="https://radiosonde.feed.sdrmap.org/index.php"
 
 #####################
 #  DNS cache setup  #
@@ -53,12 +55,12 @@ declare -A DNS_EXPIRE
 DNS_WAIT=5
 
 dns_lookup () {
-	local HOST=$1
+	local HOST="$1"
 
-	local NOW=$( date +%s )
+	local NOW="$( date +%s )"
 
 	# You need to pass in a hostname :)
-	if [[ "x$HOST" = "x" ]]; then
+	if [[ -z "$HOST" ]]; then
 		echo "ERROR: dns_lookup called without a hostname" >&2
 		return 10
 	fi
@@ -79,23 +81,23 @@ dns_lookup () {
 	# Ok, let's look this hostname up!  Use the first IP returned.
 	#  - XXX : WARNING: This assumed the output format of 'host -v' doesn't change drastically! XXX -
 
-	HOST_IP=$( host -v -W $DNS_WAIT -t a "$HOST" | perl -ne 'if (/^Trying "(.*)"/){$h=$1; next;} if (/\.\s+(\d+)\s+IN\s+A\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {$i=$2; last}; END {printf("%s", $i);}' )
+	HOST_IP="$( host -v -W $DNS_WAIT -t a "$HOST" | perl -ne 'if (/^Trying "(.*)"/){$h=$1; next;} if (/\.\s+(\d+)\s+IN\s+A\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {$i=$2; last}; END {printf("%s", $i);}' )"
 	RV=$?
 	# If this is empty, something failed.  Sleep some and try again...
-	if [[ $RV -ne 0 ]] || [[ "x$HOST_IP" == "x" ]]; then
+	if [[ $RV -ne 0 ]] || [[ -z "$HOST_IP" ]]; then
 		if ping -c1 "$HOST" &>/dev/null && ! host -v -W $DNS_WAIT -t a "$HOST" &>/dev/null; then
-			echo "host not working but ping is, disabling DNS caching!"
+			"${s6wrap[@]}" echo "host not working but ping is, disabling DNS caching!"
 			DNS_CACHE=0
 			return 1
 		fi
-		echo "ERROR: dns_lookup function unable to resolve $HOST" >&2
+		"${s6wrap[@]}" echo "ERROR: dns_lookup function unable to resolve $HOST"
 		return 30
 	fi
 
 	# Resolved ok!
-	NOW=$( date +%s )
-	DNS_LOOKUP["$HOST"]=$HOST_IP
-	DNS_EXPIRE["$HOST"]=$(( NOW + DNS_TTL ))
+	NOW="$( date +%s )"
+	DNS_LOOKUP["$HOST"]="$HOST_IP"
+	DNS_EXPIRE["$HOST"]="$(( NOW + DNS_TTL ))"
 	return 0
 }
 
@@ -110,13 +112,13 @@ while sleep "$ADSB_INTERVAL"; do
 	CURL_EXTRA=""
 	# If DNS_CACHE is set, use the builtin cache (and correspondingly the additional curl arg
 	if [[ $DNS_CACHE -ne 0 ]]; then
-		dns_lookup $REMOTE_HOST
-		RV=$?
-		if [[ $RV -ne 0 ]]; then
+		dns_lookup "$REMOTE_HOST"
+		RV="$?"
+		if [[ "$RV" -ne 0 ]]; then
 			# Some sort of error...  We'll fall back to normal curl usage, but sleep a little.
-			echo "DNS Error for ${REMOTE_HOST}, fallback ..."
+			"${s6wrap[@]}" echo "DNS Error for ${REMOTE_HOST}, fallback ..."
 		else
-			REMOTE_IP=${DNS_LOOKUP[$REMOTE_HOST]}
+			REMOTE_IP="${DNS_LOOKUP[$REMOTE_HOST]}"
 			CURL_EXTRA="--resolve ${REMOTE_HOST}:443:$REMOTE_IP"
 		fi
 	fi
@@ -163,10 +165,9 @@ while sleep "$ADSB_INTERVAL"; do
 										--data-binary @- \
 										"$REMOTE_SYS_URL"
 	fi
-	#
 
-	if gzip -c $ADSBPATH | curl --fail-with-body -sS -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
-		$CURL_EXTRA --max-time 10 -H "Content-type: application/json" -H "Content-encoding: gzip" \
+	if gzip -c "$ADSBPATH" | curl --fail-with-body -sSL -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
+		"$CURL_EXTRA" --max-time 10 -H "Content-type: application/json" -H "Content-encoding: gzip" \
 		--data-binary @- "$REMOTE_URL"
 	then
 		touch /run/feed_ok
@@ -174,16 +175,18 @@ while sleep "$ADSB_INTERVAL"; do
 		rm -f /run/feed_ok
 	fi
 
-	# if [[ "$radiosonde" = "true" ]] && [[ $(($(date +"%s") - $radiosondelastrun)) -ge "$radiosondeinterval" ]];
-	# 	then
-	# 	radiosondelastrun=$(date +"%s")
-	# 	if [[ ! -d "$radiosondepath" ]]; then
-	# 		echo "The log directory '$radiosondepath' doesn't exist."
-	# 		exit 1
-	# 	fi;
-	# 	for i in $(find $radiosondepath -mmin -0.1 -name "*sonde.log");
-	# 		do
-	# 		tail -n 1 $i | gzip | curl -s -u $username:$password -X POST -H "Content-type: application/json" -H "Content-encoding: gzip" --data-binary @- https://radiosonde.feed.sdrmap.org/index.php
-	# 	done;
-	# fi;
-done;
+	if compgen -G "$radiosondepath/*sonde.log" > /dev/null && \
+		(( $(date +"%s") - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
+			radiosondelastrun="$(date +"%s")"
+			find "$radiosondepath" -mmin -$(( 1+(RADIOSONDE_INTERVAL/60) )) -name "*sonde.log" -exec \
+				bash -c 'f="$1"; tail -qn 1 "$f" | \
+								 gzip | \
+								 curl -sSL --fail-with-body \
+											-u '"$SMUSERNAME"':'"$SMPASSWORD"' \
+											-X POST \
+											-H "Content-type: application/json" \
+											-H "Content-encoding: gzip" --data-binary @- '"$REMOTE_SONDE_URL"' \
+								 && "${s6wrap[@]}" echo "Sonde data was sent!"' \
+				shell {} \;
+	fi
+done

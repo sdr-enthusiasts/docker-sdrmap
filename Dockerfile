@@ -27,7 +27,8 @@ ENV BEASTPORT=30005 \
     SMPASSWORD=yourpassword \
     ADSB_INTERVAL=1 \
     SYSINFO_INTERVAL=60 \
-    MLAT=true
+    MLAT=true \
+    RADIOSONDE_INTERVAL=30
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 
@@ -44,6 +45,9 @@ RUN \
     apt-get install -y --no-install-suggests --no-install-recommends \
     "${KEPT_PACKAGES[@]}" \
     "${TEMP_PACKAGES[@]}" && \
+    # Add version to container:
+    branch="#main#" && \
+    echo "${branch//#/}_($(curl -ssL "https://api.github.com/repos/sdr-enthusiasts/docker-sdrmap/commits/main" |  awk '{if ($1=="\"sha\":") {print substr($2,2,7); exit}}'))_$(date +%y-%m-%d-%T%Z)" | tee /.VERSION && \
     # Clean-up.
     apt-get autoremove -q -o APT::Autoremove::RecommendsImportant=0 -o APT::Autoremove::SuggestsImportant=0 -y "${TEMP_PACKAGES[@]}" && \
     apt-get clean -q -y && \

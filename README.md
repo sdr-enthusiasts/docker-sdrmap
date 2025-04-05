@@ -30,6 +30,8 @@ services:
       - /tmp
       - /run:exec,size=64M
       - /var/log
+    volumes:
+      - /opt/radiosonde/auto_rx/log:/opt/radiosonde
 ```
 
 ## MLAT
@@ -80,6 +82,30 @@ There are a series of available environment variables:
 ## Ports
 
 No ports need to be mapped into this container.
+
+## Sending RadioSonde data
+
+If you are running RadioSonde on the same device as this `SDRMap` container, then you can easily share RadioSonde data by mapping the RadioSonde logs directory to the SDRMap container. Once mapped, the SDRMap container will automatically detect if there is RadioSonde data to be shared.
+
+For example, if RadioSonde places its logs in `/opt/radiosonde/auto_rx/log`, then add the following volume definition to the sdrmap service definition in your `docker-compose.yml` file:
+
+```yaml
+    volumes:
+      - /opt/radiosonde/auto_rx/log:/opt/radiosonde
+```
+
+## Sending AIS data
+
+Sharing of AIS data (location of ships and vessels) cannot be done directly with this container. However, if you are using JvdE's [AIS-Catcher](https://github.com/jvde-github/ais-catcher) or the SDR-Enthusiasts' [ShipFeeder](https://github.com/sdr-enthusiasts/docker-shipfeeder) container, you can easily add it there. Make sure to replace `yourusername` and `yourpassword` with the credentials that were provided by SDRMap.
+
+- Using the [ShipFeeder](https://github.com/sdr-enthusiasts/docker-shipfeeder) container:
+  - set the following environment parameters for the `shipfeeder` service in your `docker-compose.yml` file:
+    - `SDRMAP_STATION_ID=yourusername`
+    - `SDRMAP_PASSWORD=yourpassword`
+  
+- Using `AIS-Catcher` directly:
+  - Add this to the command line: `-H https://ais.feed.sdrmap.org/ USERPWD yourusername:yourpassword GZIP on INTERVAL 15 RESPONSE off`
+  - Or alternatively, follow [these instructions](https://github.com/sdrmap/docs/wiki/5.-AIS#adjust-config-file) if you are using a config file to set your AIS-Catcher parameters
 
 ## Logging
 
