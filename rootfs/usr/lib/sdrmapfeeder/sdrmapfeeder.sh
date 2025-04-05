@@ -165,9 +165,10 @@ while sleep "$ADSB_INTERVAL"; do
 										--data-binary @- \
 										"$REMOTE_SYS_URL"
 	fi
-
+	
+	# shellcheck disable=SC2086
 	if gzip -c "$ADSBPATH" | curl --fail-with-body -sSL -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
-		"$CURL_EXTRA" --max-time 10 -H "Content-type: application/json" -H "Content-encoding: gzip" \
+		$CURL_EXTRA --max-time 10 -H "Content-type: application/json" -H "Content-encoding: gzip" \
 		--data-binary @- "$REMOTE_URL"
 	then
 		touch /run/feed_ok
