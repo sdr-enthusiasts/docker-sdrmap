@@ -187,7 +187,7 @@ while sleep "$ADSB_INTERVAL"; do
 											-X POST \
 											-H "Content-type: application/json" \
 											-H "Content-encoding: gzip" --data-binary @- '"$REMOTE_SONDE_URL"' \
-								 && "${s6wrap[@]}" echo "Sonde data was sent!"' \
+								 && "${s6wrap[@]}" echo "RadioSonde data sent: $(tail -qn 1 "$f")"' \
 				shell {} \;
 	fi
 done
