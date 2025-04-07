@@ -11,14 +11,14 @@ NOCOLOR='\033[0m'
 # Check to make sure the correct command line arguments have been set
 EXITCODE=0
 if [[ -z "${BEASTHOST}" ]]; then
-  "${s6wrap[@]}" echo -e "${YELLOW}WARNING: No data input configured: BEASTHOST environment variables not set${NOCOLOR}"
+  echo -e "${YELLOW}WARNING: No data input configured: BEASTHOST environment variables not set${NOCOLOR}"
   EXITCODE=1
 fi
 if [[ -z "${LAT}" ]]; then
-  "${s6wrap[@]}" echo -e "${YELLOW}WARNING: LAT environment variable not set, Home location will not be accurate${NOCOLOR}"
+  echo -e "${YELLOW}WARNING: LAT environment variable not set, Home location will not be accurate${NOCOLOR}"
 fi
 if [[ -z "${LON}" ]]; then
-  "${s6wrap[@]}" echo -e "${YELLOW}WARNING: LON environment variable not set, Home location will not be accurate${NOCOLOR}"
+  echo -e "${YELLOW}WARNING: LON environment variable not set, Home location will not be accurate${NOCOLOR}"
 fi
 if [[ $EXITCODE -ne 0 ]]; then
   exit 1
@@ -26,12 +26,12 @@ fi
 
 # Set up timezone
 if [[ -z "${TZ}" ]]; then
-  "${s6wrap[@]}" echo -e "${YELLOW}WARNING: TZ environment variable not set${NOCOLOR}"
+  echo -e "${YELLOW}WARNING: TZ environment variable not set${NOCOLOR}"
 else
   ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" >/etc/timezone
 fi
 
-"${s6wrap[@]}" echo "ADSB feeding      : Enabled"
-"${s6wrap[@]}" echo "MLAT feeding      : $(if chk_disabled "$MLAT"; then echo "Disabled"; else echo "Enabled"; fi)"
-"${s6wrap[@]}" echo "RadioSonde feeding: $(if compgen -G /opt/radiosonde >/dev/null 2>&1; then echo "Enabled"; else echo "Disabled"; fi)"
-"${s6wrap[@]}" echo "Sysinfo feeding   : $(if chk_enabled "$SEND_SYSINFO"; then echo "Enabled"; else echo "Disabled"; fi)"
+echo "ADSB feeding      : Enabled"
+echo "MLAT feeding      : $(if chk_disabled "$MLAT"; then echo "Disabled"; else echo "Enabled"; fi)"
+echo "RadioSonde feeding: $(if compgen -G /opt/radiosonde >/dev/null 2>&1; then echo "Enabled"; else echo "Disabled"; fi)"
+echo "Sysinfo feeding   : $(if chk_enabled "$SEND_SYSINFO"; then echo "Enabled"; else echo "Disabled"; fi)"
