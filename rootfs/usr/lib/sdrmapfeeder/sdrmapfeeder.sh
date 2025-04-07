@@ -179,20 +179,20 @@ while sleep "$ADSB_INTERVAL"; do
 		rm -f /run/feed_ok
 	fi
 
-    if (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
-        while IFS='' read -r -d '' file; do
-            lastline="$(tail -qn 1 "$file")"
-            [[ -n "$RADIO_SONDE_DEBUG" ]] && "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
-            if gzip -c <<< "${lastline}" | \
-                curl -sSL --fail-with-body \
-                -u "$SMUSERNAME":"$SMPASSWORD" \
-                -X POST \
-                -H "Content-type: application/json" \
-                -H "Content-encoding: gzip" --data-binary @- "$REMOTE_SONDE_URL"
-            then
-                # only update lastrun when we uploaded something
-                radiosondelastrun="$EPOCHSECONDS"
-            fi
-        done < <(find "$radiosondepath" -mmin -0.1 -name "*sonde.log" -print0)
-    fi
+	if (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
+			while IFS='' read -r -d '' file; do
+					lastline="$(tail -qn 1 "$file")"
+					[[ -n "$RADIO_SONDE_DEBUG" ]] && "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
+					if gzip -c <<< "${lastline}" | \
+							curl -sSL --fail-with-body \
+							-u "$SMUSERNAME":"$SMPASSWORD" \
+							-X POST \
+							-H "Content-type: application/json" \
+							-H "Content-encoding: gzip" --data-binary @- "$REMOTE_SONDE_URL"
+					then
+							# only update lastrun when we uploaded something
+							radiosondelastrun="$EPOCHSECONDS"
+					fi
+			done < <(find "$radiosondepath" -mmin -0.1 -name "*sonde.log" -print0)
+	fi
 done
