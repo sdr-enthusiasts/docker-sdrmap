@@ -8,7 +8,7 @@
 
 source /scripts/common
 
-if ! chk_enabled "$MLAT"; then
+if ! chk_enabled "$MLAT" || [[ -z "$BEASTHOST" ]]; then
   "${s6wrap[@]}" echo "MLAT is disabled, not starting mlat-client-sdrmap"
   sleep infinity
 fi

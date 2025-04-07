@@ -11,16 +11,8 @@ sysinfolastrun=0
 radiosondelastrun=0
 radiosondepath="/opt/radiosonde"
 
-if compgen -G "$radiosondepath" >/dev/null 2>&1; then
-	SONDE_ENABLED=true
-else
-	SONDE_ENABLED=false
-fi
-
-# wait for readsb to be ready
-while ! [[ -f "$ADSBPATH" ]]; do
-	sleep 1
-done
+# wait for things to be ready
+sleep 2
 
 
 if [[ -z "$SMUSERNAME" ]] || [[ -z "$SMPASSWORD" ]] || [[ "$SMUSERNAME" == "yourusername" ]] || [[ "$SMPASSWORD" == "yourpassword" ]]; then
@@ -174,17 +166,19 @@ while sleep "$ADSB_INTERVAL"; do
 										"$REMOTE_SYS_URL"
 	fi
 	
-	# shellcheck disable=SC2086
-	if gzip -c "$ADSBPATH" | curl --fail-with-body -sSL -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
-		$CURL_EXTRA --max-time 10 -H "Content-type: application/json" -H "Content-encoding: gzip" \
-		--data-binary @- "$REMOTE_URL"
-	then
-		touch /run/feed_ok
-	else
-		rm -f /run/feed_ok
-	fi
+    if [[ -n "$BEASTHOST" ]]; then
+        # shellcheck disable=SC2086
+        if gzip -c "$ADSBPATH" | curl --fail-with-body -sSL -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
+            $CURL_EXTRA --max-time 10 -H "Content-type: application/json" -H "Content-encoding: gzip" \
+            --data-binary @- "$REMOTE_URL"
+        then
+            touch /run/feed_ok
+        else
+            rm -f /run/feed_ok
+        fi
+    fi
 
-	if $SONDE_ENABLED && (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
+	if [[ -d /opt/radiosonde ]] && (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
 			while IFS='' read -r -d '' file; do
 					lastline="$(tail -qn 1 "$file")"
 					[[ -n "$RADIO_SONDE_DEBUG" ]] && "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
