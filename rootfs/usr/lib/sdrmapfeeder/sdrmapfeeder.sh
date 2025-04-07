@@ -9,8 +9,13 @@ ADSBPATH="/run/readsb/aircraft.json"
 version='4.0-sdre-docker'
 sysinfolastrun=0
 radiosondelastrun=0
-
 radiosondepath="/opt/radiosonde"
+
+if compgen -G "$radiosondepath" >/dev/null 2>&1; then
+	SONDE_ENABLED=true
+else
+	SONDE_ENABLED=false
+fi
 
 # wait for readsb to be ready
 while ! [[ -f "$ADSBPATH" ]]; do
@@ -179,7 +184,7 @@ while sleep "$ADSB_INTERVAL"; do
 		rm -f /run/feed_ok
 	fi
 
-	if (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
+	if $SONDE_ENABLED && (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
 			while IFS='' read -r -d '' file; do
 					lastline="$(tail -qn 1 "$file")"
 					[[ -n "$RADIO_SONDE_DEBUG" ]] && "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
