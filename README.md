@@ -102,7 +102,7 @@ Sharing of AIS data (location of ships and vessels) cannot be done directly with
   - set the following environment parameters for the `shipfeeder` service in your `docker-compose.yml` file:
     - `SDRMAP_STATION_ID=yourusername`
     - `SDRMAP_PASSWORD=yourpassword`
-  
+
 - Using `AIS-Catcher` directly:
   - Add this to the command line: `-H https://ais.feed.sdrmap.org/ USERPWD yourusername:yourpassword GZIP on INTERVAL 15 RESPONSE off`
   - Or alternatively, follow [these instructions](https://github.com/sdrmap/docs/wiki/5.-AIS#adjust-config-file) if you are using a config file to set your AIS-Catcher parameters
