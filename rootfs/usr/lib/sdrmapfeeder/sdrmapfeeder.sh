@@ -130,7 +130,7 @@ while sleep "$ADSB_INTERVAL"; do
 		sysinfolastrun=$(date +"%s")
 		echo "{\
 			\"cpu\":{\
-				\"model\":\"$(grep 'model name' /proc/cpuinfo |tail -n 1|cut -d ':' -f 2)\",\
+				\"model\":\"$({ grep 'model name' /proc/cpuinfo || grep 'Model' /proc/cpuinfo; } |tail -n 1|cut -d ':' -f 2)\",\
 				\"cores\":\"$(grep -c -e '^processor' /proc/cpuinfo)\",\
 				\"load\":\"$(cut -d ' ' -f 1 < /proc/loadavg)\",\
 				\"temp\":\"$(( $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null |sort -n|tail -n 1) / 1000 ))\",\
