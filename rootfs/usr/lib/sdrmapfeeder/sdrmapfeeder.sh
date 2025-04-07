@@ -182,7 +182,7 @@ while sleep "$ADSB_INTERVAL"; do
     if (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
         while IFS='' read -r -d '' file; do
             lastline="$(tail -qn 1 "$file")"
-            "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
+            [[ -n "$RADIO_SONDE_DEBUG" ]] && "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
             if gzip -c <<< "${lastline}" | \
                 curl -sSL --fail-with-body \
                 -u "$SMUSERNAME":"$SMPASSWORD" \
