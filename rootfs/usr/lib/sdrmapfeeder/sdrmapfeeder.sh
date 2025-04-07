@@ -11,14 +11,18 @@ sysinfolastrun=0
 radiosondelastrun=0
 radiosondepath="/opt/radiosonde"
 
-# wait for things to be ready
-sleep 2
-
 
 if [[ -z "$SMUSERNAME" ]] || [[ -z "$SMPASSWORD" ]] || [[ "$SMUSERNAME" == "yourusername" ]] || [[ "$SMPASSWORD" == "yourpassword" ]]; then
 	"${s6wrap[@]}" echo "Please edit your credentials."
 	sleep infinity
 fi
+
+if [[ -d /opt/radiosonde ]]; then
+    SONDE_ENABLED=true
+fi
+
+# wait for things to be ready
+sleep 2
 
 REMOTE_URL="https://adsb.feed.sdrmap.org/index.php"
 REMOTE_HOST="$(awk -F'/' '{print $3}' <<< "$REMOTE_URL")"
@@ -178,10 +182,10 @@ while sleep "$ADSB_INTERVAL"; do
         fi
     fi
 
-	if [[ -d /opt/radiosonde ]] && (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
+	if chk_enabled "$SONDE_ENABLED" && (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
 			while IFS='' read -r -d '' file; do
 					lastline="$(tail -qn 1 "$file")"
-					[[ -n "$RADIO_SONDE_DEBUG" ]] && "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
+					[[ -n "$RADIOSONDE_DEBUG" ]] && "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
 					if gzip -c <<< "${lastline}" | \
 							curl -sSL --fail-with-body \
 							-u "$SMUSERNAME":"$SMPASSWORD" \
