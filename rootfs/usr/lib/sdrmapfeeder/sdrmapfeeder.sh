@@ -107,6 +107,9 @@ fi
 if ! (( SYSINFO_INTERVAL >= 30 )); then
     SYSINFO_INTERVAL=30
 fi
+if ! (( RADIOSONDE_INTERVAL >= 3 )); then
+    RADIOSONDE_INTERVAL=3
+fi
 
 while sleep "$ADSB_INTERVAL"; do
 	CURL_EXTRA=""
@@ -176,18 +179,20 @@ while sleep "$ADSB_INTERVAL"; do
 		rm -f /run/feed_ok
 	fi
 
-	if compgen -G "$radiosondepath/*sonde.log" > /dev/null && \
-		(( $(date +"%s") - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
-			radiosondelastrun="$(date +"%s")"
-			find "$radiosondepath" -mmin -$(( 1+(RADIOSONDE_INTERVAL/60) )) -name "*sonde.log" -exec \
-				bash -c 'f="$1"; tail -qn 1 "$f" | \
-								 gzip | \
-								 curl -sSL --fail-with-body \
-											-u '"$SMUSERNAME"':'"$SMPASSWORD"' \
-											-X POST \
-											-H "Content-type: application/json" \
-											-H "Content-encoding: gzip" --data-binary @- '"$REMOTE_SONDE_URL"' \
-								 && "${s6wrap[@]}" echo "RadioSonde data sent: $(tail -qn 1 "$f")"' \
-				shell {} \;
-	fi
+    if (( EPOCHSECONDS - radiosondelastrun >= RADIOSONDE_INTERVAL )); then
+        while IFS='' read -r -d '' file; do
+            lastline="$(tail -qn 1 "$file")"
+            "${s6wrap[@]}" echo "RadioSonde sending data: ${lastline}"
+            if gzip -c <<< "${lastline}" | \
+                curl -sSL --fail-with-body \
+                -u "$SMUSERNAME":"$SMPASSWORD" \
+                -X POST \
+                -H "Content-type: application/json" \
+                -H "Content-encoding: gzip" --data-binary @- "$REMOTE_SONDE_URL"
+            then
+                # only update lastrun when we uploaded something
+                radiosondelastrun="$EPOCHSECONDS"
+            fi
+        done < <(find "$radiosondepath" -mmin -0.1 -name "*sonde.log" -print0)
+    fi
 done

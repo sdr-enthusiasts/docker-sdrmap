@@ -28,7 +28,7 @@ ENV BEASTPORT=30005 \
     ADSB_INTERVAL=1 \
     SYSINFO_INTERVAL=60 \
     MLAT=true \
-    RADIOSONDE_INTERVAL=30
+    RADIOSONDE_INTERVAL=3
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 
