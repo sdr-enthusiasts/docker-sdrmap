@@ -17,6 +17,7 @@ READSB_BIN="/usr/local/bin/readsb"
 READSB_CMD=("--net")
 READSB_CMD+=("--quiet")
 READSB_CMD+=("--write-json=/run/readsb")
+# shellcheck disable=SC2153
 READSB_CMD+=("--net-connector=${BEASTHOST},${BEASTPORT},beast_in")
 READSB_CMD+=("--net-bo-port=30005")
 READSB_CMD+=("--net-bi-port=30104")
