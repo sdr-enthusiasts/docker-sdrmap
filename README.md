@@ -50,8 +50,8 @@ The container also provides MLAT results on port 30105. Alternatively, you could
 
 ```yaml
 - ULTRAFEEDER_CONFIG=
-    ...
-    mlathub,sdrmap,30105,beast_in;
+  ...
+  mlathub,sdrmap,30105,beast_in;
 ```
 
 ### MLAT Privacy
@@ -64,20 +64,20 @@ The container also provides MLAT results on port 30105. Alternatively, you could
 
 There are a series of available environment variables:
 
-| Environment Variable | Purpose                                                                                  | Default        |
-| -------------------- | ---------------------------------------------------------------------------------------- | -------------- |
-| `BEASTHOST`          | Required. IP/Hostname of a Mode-S/BEAST provider (dump1090/readsb)                       |                |
-| `BEASTPORT`          | Optional. TCP port number of Mode-S/BEAST provider (dump1090/readsy)                     | 30005          |
-| `SMUSERNAME`         | Required. The `yourusername` username provided by SDRMap                                                                        |  |
-| `SMPASSWORD`         | Required. The `yourpassword` password provided by SDRMap Password                                                               |  |
-| `LAT`                | Required. Latitude of the antenna                                                        |                |
-| `LON`                | Required. Longitude of the antenna                                                       |                |
-| `ALT`                | For MLAT set the altitude in **_meters_**. No trailing `m` or other values necessary.    | Unset          |
-| `TZ`                 | Optional. Your local timezone                                                            | GMT            |
-| `MLAT`               | Optional. Enable MLAT (true/false)                                                       | true          |
-| `MLAT_RESULTS`       | Optional. Add --results output to mlat-client (example: beast,connect,ultrafeeder:31004) | false          |
-| `MLAT_PRIVACY`       | Optional. Set to true to hide your station on the SDRMap website                        | false          |
-| `SEND_SYSINFO`       | Optional. Set to true to share some system information (CPU, speed, memory use, readsb/mlat-client versions, etc.) with SDRMap. This information may be shown on the SDRMap webpage. | false |
+| Environment Variable | Purpose                                                                                                                                                                              | Default |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `BEASTHOST`          | Required. IP/Hostname of a Mode-S/BEAST provider (dump1090/readsb)                                                                                                                   |         |
+| `BEASTPORT`          | Optional. TCP port number of Mode-S/BEAST provider (dump1090/readsy)                                                                                                                 | 30005   |
+| `SMUSERNAME`         | Required. The `yourusername` username provided by SDRMap                                                                                                                             |         |
+| `SMPASSWORD`         | Required. The `yourpassword` password provided by SDRMap Password                                                                                                                    |         |
+| `LAT`                | Required. Latitude of the antenna                                                                                                                                                    |         |
+| `LON`                | Required. Longitude of the antenna                                                                                                                                                   |         |
+| `ALT`                | For MLAT set the altitude in **_meters_**. No trailing `m` or other values necessary.                                                                                                | Unset   |
+| `TZ`                 | Optional. Your local timezone                                                                                                                                                        | GMT     |
+| `MLAT`               | Optional. Enable MLAT (true/false)                                                                                                                                                   | true    |
+| `MLAT_RESULTS`       | Optional. Add --results output to mlat-client (example: beast,connect,ultrafeeder:31004)                                                                                             | false   |
+| `MLAT_PRIVACY`       | Optional. Set to true to hide your station on the SDRMap website                                                                                                                     | false   |
+| `SEND_SYSINFO`       | Optional. Set to true to share some system information (CPU, speed, memory use, readsb/mlat-client versions, etc.) with SDRMap. This information may be shown on the SDRMap webpage. | false   |
 
 ## Ports
 
@@ -90,8 +90,8 @@ If you are running RadioSonde on the same device as this `SDRMap` container, the
 For example, if RadioSonde places its logs in `/opt/radiosonde/auto_rx/log`, then add the following volume definition to the sdrmap service definition in your `docker-compose.yml` file:
 
 ```yaml
-    volumes:
-      - /opt/radiosonde/auto_rx/log:/opt/radiosonde
+volumes:
+  - /opt/radiosonde/auto_rx/log:/opt/radiosonde
 ```
 
 ## Sending AIS data
