@@ -173,7 +173,7 @@ while sleep "$ADSB_INTERVAL"; do
 										--data-binary @- \
 										"$REMOTE_SYS_URL"
 	fi
-	
+
     if [[ -n "$BEASTHOST" ]]; then
         # shellcheck disable=SC2086
         if gzip -c "$ADSBPATH" | curl --fail-with-body -sSL -u "$SMUSERNAME":"$SMPASSWORD" -X POST \
