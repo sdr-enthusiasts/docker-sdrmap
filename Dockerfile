@@ -22,6 +22,10 @@ RUN \
 
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:wreadsb
 
+# SMUSERNAME/SMPASSWORD are placeholder defaults that the user overrides with
+# their own sdrmap credentials at run time. Supplying them via the environment
+# is inherent to how this image is configured, so DL3064 is not actionable here.
+# hadolint ignore=DL3064
 ENV BEASTPORT=30005 \
     SMUSERNAME=yourusername \
     SMPASSWORD=yourpassword \
