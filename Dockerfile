@@ -51,7 +51,9 @@ RUN \
     "${TEMP_PACKAGES[@]}" && \
     # Add version to container:
     branch="#main#" && \
-    echo "${branch//#/}_($(curl -ssL "https://api.github.com/repos/sdr-enthusiasts/docker-sdrmap/commits/main" |  awk '{if ($1=="\"sha\":") {print substr($2,2,7); exit}}'))_$(date +%y-%m-%d-%T%Z)" | tee /.VERSION && \
+    SHA="$(curl --fail --silent --show-error --location --retry 3 "https://api.github.com/repos/sdr-enthusiasts/docker-sdrmap/commits/main" | awk '$1=="\"sha\":" && !f {print substr($2,2,7); f=1}')" && \
+    [[ -n "$SHA" ]] && \
+    echo "${branch//#/}_(${SHA})_$(date +%y-%m-%d-%T%Z)" | tee /.VERSION && \
     # Clean-up.
     apt-get autoremove -q -o APT::Autoremove::RecommendsImportant=0 -o APT::Autoremove::SuggestsImportant=0 -y "${TEMP_PACKAGES[@]}" && \
     apt-get clean -q -y && \
