@@ -36,6 +36,7 @@ ENV BEASTPORT=30005 \
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 
+ARG VERSION_SHA
 # hadolint ignore=DL3008
 RUN \
     --mount=type=bind,from=buildimage,source=/,target=/buildimage/ \
@@ -51,7 +52,7 @@ RUN \
     "${TEMP_PACKAGES[@]}" && \
     # Add version to container:
     branch="#main#" && \
-    SHA="$(curl --fail --silent --show-error --location --retry 3 "https://api.github.com/repos/sdr-enthusiasts/docker-sdrmap/commits/main" | awk '$1=="\"sha\":" && !f {print substr($2,2,7); f=1}')" && \
+    SHA="${VERSION_SHA:-local}" && SHA="${SHA:0:7}" && \
     [[ -n "$SHA" ]] && \
     echo "${branch//#/}_(${SHA})_$(date +%y-%m-%d-%T%Z)" | tee /.VERSION && \
     # Clean-up.
